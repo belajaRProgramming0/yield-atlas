@@ -1,0 +1,48 @@
+ref_area,country,currency,region,is_country
+AUS,Australia,AUD,Asia-Pacific,TRUE
+AUT,Austria,EUR,Europe,TRUE
+BEL,Belgium,EUR,Europe,TRUE
+BGR,Bulgaria,EUR,Europe,TRUE
+BRA,Brazil,BRL,Americas,TRUE
+CAN,Canada,CAD,Americas,TRUE
+CHE,Switzerland,CHF,Europe,TRUE
+CHL,Chile,CLP,Americas,TRUE
+CHN,China,CNY,Asia-Pacific,TRUE
+COL,Colombia,COP,Americas,TRUE
+CRI,Costa Rica,CRC,Americas,TRUE
+CZE,Czechia,CZK,Europe,TRUE
+DEU,Germany,EUR,Europe,TRUE
+DNK,Denmark,DKK,Europe,TRUE
+EA20,Euro Area (20 countries),EUR,Aggregate,FALSE
+ESP,Spain,EUR,Europe,TRUE
+EST,Estonia,EUR,Europe,TRUE
+FIN,Finland,EUR,Europe,TRUE
+FRA,France,EUR,Europe,TRUE
+GBR,United Kingdom,GBP,Europe,TRUE
+GRC,Greece,EUR,Europe,TRUE
+HRV,Croatia,EUR,Europe,TRUE
+HUN,Hungary,HUF,Europe,TRUE
+IDN,Indonesia,IDR,Asia-Pacific,TRUE
+IND,India,INR,Asia-Pacific,TRUE
+IRL,Ireland,EUR,Europe,TRUE
+ISL,Iceland,ISK,Europe,TRUE
+ISR,Israel,ILS,Middle East,TRUE
+ITA,Italy,EUR,Europe,TRUE
+JPN,Japan,JPY,Asia-Pacific,TRUE
+KOR,South Korea,KRW,Asia-Pacific,TRUE
+LTU,Lithuania,EUR,Europe,TRUE
+LUX,Luxembourg,EUR,Europe,TRUE
+LVA,Latvia,EUR,Europe,TRUE
+MEX,Mexico,MXN,Americas,TRUE
+NLD,Netherlands,EUR,Europe,TRUE
+NOR,Norway,NOK,Europe,TRUE
+NZL,New Zealand,NZD,Asia-Pacific,TRUE
+POL,Poland,PLN,Europe,TRUE
+PRT,Portugal,EUR,Europe,TRUE
+ROU,Romania,RON,Europe,TRUE
+RUS,Russia,RUB,Europe,TRUE
+SVK,Slovakia,EUR,Europe,TRUE
+SVN,Slovenia,EUR,Europe,TRUE
+SWE,Sweden,SEK,Europe,TRUE
+USA,United States,USD,Americas,TRUE
+ZAF,South Africa,ZAR,Africa,TRUE

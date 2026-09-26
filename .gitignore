@@ -1,0 +1,31 @@
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+.Renviron
+data/raw/*
+!data/raw/README.md
+outputs/*
+!outputs/.gitkeep
+renv/library/
+renv/staging/
+.env
+.env.*
+
+# Temporary and generated files
+tmp/
+temp/
+.tmp/
+.temp/
+.cache/
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*~
+
+# Browser test output
+test-results/
+playwright-report/
+screenshots/

@@ -1,0 +1,51 @@
+.market-panel { margin-bottom:25px; }
+.section-heading { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:24px; }
+.section-heading .eyebrow { color:#198575; font-size:9px; }
+.section-heading h2 { font-size:23px; letter-spacing:-.6px; font-weight:600; margin:10px 0; }
+.section-heading p { color:#72808d; font-size:12px; margin:0; }
+.section-heading .btn { flex-shrink:0; }
+.market-filters { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+.market-filters .shiny-input-container { width:100%; }
+.rank-cards { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin:8px 0 16px; }
+.rank-card { border:1px solid #e3e9ed; border-top:3px solid; border-radius:6px; padding:14px; }
+.rank-number { display:flex; justify-content:space-between; color:#7a8994; font-size:10px; margin-bottom:10px; }
+.rank-number span { font-size:9px; letter-spacing:1px; }
+.rank-card strong { font-size:11px; font-weight:600; }
+.rank-yield { font-size:26px; letter-spacing:-.8px; font-weight:600; margin-top:9px; }
+.market-disclosure { padding:0 5px; font-size:11px; color:#72808d; line-height:1.8; }
+.metric-value { font-size:27px; }
+.market-panel>.shiny-input-container { width:100%; }
+.panel-card li { color:#637487; line-height:1.8; font-size:12px; margin-bottom:12px; }
+.panel-card h3 { font-size:19px; }
+.panel-card p { line-height:1.7; }
+.tab-pane>.panel-card { margin-bottom:24px; }
+.plotly.html-widget { width:100%!important; }
+.js-plotly-plot .plotly .modebar { z-index:2; }
+.investment-two-col { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.data-badge { display:inline-block; color:#137e72; background:#edf6f2; border-radius:4px; padding:7px 10px; font-size:10px; letter-spacing:1px; margin-bottom:20px; }
+.assumption-badge { color:#865e21; background:#fbf0d9; }
+.scenario-panel { border-top:3px solid #c59a4b; }
+.reference-note { padding:12px 15px; background:#f6f4ed; border-left:3px solid #c59a4b; font-size:12px; line-height:1.8; margin:15px 0; color:#665a42; }
+.context-action { display:flex; align-items:center; }
+.panel-card details { margin-top:18px; }
+.panel-card summary { cursor:pointer; color:#137e72; font-size:13px; padding:10px 0; }
+.scenario-results .metric-value { font-size:22px; overflow-wrap:anywhere; }
+.investment-two-col > * { min-width:0; }
+.bond-welcome { padding:32px; margin:24px 0; border-radius:14px; background:linear-gradient(120deg,#e8f4ee,#f7faf6); border:1px solid #d9e9df; }
+.bond-welcome h2 { max-width:650px; font-size:34px; line-height:1.18; letter-spacing:-1px; color:#183b38; margin:14px 0; }
+.bond-welcome > p { color:#617871; font-size:14px; }
+.welcome-inputs { margin-top:26px; }
+.welcome-button { background:#137e72; color:white; padding:12px 24px; border-radius:7px; font-weight:600; }
+.welcome-button:hover,.welcome-button:focus { background:#0d655c; color:white; }
+.welcome-link { display:inline-block; color:#326b62; margin:14px 18px; font-size:12px; }
+.bond-selection { scroll-margin-top:20px; }
+.payment-preview { padding:28px; border:1px dashed #bccfc9; border-radius:12px; margin-bottom:24px; background:#fafcfb; }
+.payment-preview h3 { font-size:20px; color:#264c44; }
+.payment-preview p { font-size:12px; color:#6d7e78; margin-top:20px; }
+.payment-steps { display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; }
+.payment-steps span { flex:1; min-width:150px; border-top:3px solid #a7cbbd; padding-top:12px; font-size:13px; color:#406157; }
+.advanced-assumptions > summary { font-weight:600; }
+@media(max-width:600px) { .bond-welcome { padding:22px; } .bond-welcome h2 { font-size:28px; } .welcome-link { margin:14px 0; display:block; } }
+@media(max-width:900px) { .investment-two-col { grid-template-columns:1fr; } }
+@media(max-width:1100px) { .rank-cards { grid-template-columns:repeat(3,minmax(0,1fr)); } .section-heading { flex-wrap:wrap; } }
+@media(max-width:600px) { .market-filters { grid-template-columns:1fr; gap:0; } .rank-cards { grid-template-columns:repeat(2,minmax(0,1fr)); } .rank-yield { font-size:23px; } .metric-value { font-size:23px; } .section-heading h2 { font-size:21px; } }

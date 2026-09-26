@@ -1,0 +1,26 @@
+[
+  {
+    "file": "us_raw.json",
+    "url": "https://www.treasurydirect.gov/TA_WS/securities/search?format=json&type=Note",
+    "retrieved_at_utc": "2026-09-26T08:40:06Z",
+    "md5": "04aec07a94abeb92a3e41ca838f19581"
+  },
+  {
+    "file": "au_raw.xlsx",
+    "url": "https://www.aofm.gov.au/sites/default/files/2025-06-20/treasury%20bonds%20-%20issuance.xlsx",
+    "retrieved_at_utc": "2026-09-26T08:40:07Z",
+    "md5": "6bc8a4fd049671044d851aab9bcbf93f"
+  },
+  {
+    "file": "fx_raw.xml",
+    "url": "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml",
+    "retrieved_at_utc": "2026-09-26T08:40:09Z",
+    "md5": "2d4b2e4bc3c50c7c60de1f434f9881dd"
+  },
+  {
+    "file": "inflation_raw.json",
+    "url": "https://api.worldbank.org/v2/country/all/indicator/FP.CPI.TOTL.ZG?format=json&date=2020:2026&per_page=20000",
+    "retrieved_at_utc": "2026-09-26T08:40:09Z",
+    "md5": "4202acb6603a44446be8da9acbf8cfb0"
+  }
+]
