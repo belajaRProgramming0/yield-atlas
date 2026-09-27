@@ -19,6 +19,13 @@ stopifnot(
   all(is.finite(as.matrix(structure$loadings[, c("PC1", "PC2")]))),
   sum(structure$profiles$markets) == nrow(structure$features)
 )
+description <- describe_market_position(structure, "Colombia")
+stopifnot(
+  length(description$peers) == 3L,
+  nrow(description$features) == 4L,
+  all(nzchar(description$features$value)),
+  nzchar(description$explanation)
+)
 
 ward <- analyse_market_structure(
   benchmarks, instruments$inflation, month,

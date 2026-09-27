@@ -15,6 +15,13 @@ structure_feature_labels <- c(
   lagged_inflation = "Previous-year inflation (%)"
 )
 
+structure_plain_labels <- c(
+  yield_level = "Latest yield",
+  change_12m_bp = "12-month movement",
+  volatility_bp = "Monthly volatility",
+  lagged_inflation = "Previous-year inflation"
+)
+
 build_market_features <- function(data, inflation, end_month, lookback_months = 36L) {
   end_month <- as.Date(end_month)
   data <- data[data$date <= end_month & is.finite(data$yield), ]
@@ -113,8 +120,61 @@ analyse_market_structure <- function(data, inflation, end_month, lookback_months
   profiles$markets <- as.integer(counts[as.character(profiles$group)])
   profiles <- profiles[, c("group", "markets", variables)]
   profiles$group <- paste("Group", profiles$group)
-  list(features = features, pca = pca, variance = variance, scores = scores,
+  rownames(scaled) <- features$country
+  list(features = features, scaled = scaled, pca = pca, variance = variance, scores = scores,
        loadings = loadings, clustering = clustering, profiles = profiles)
+}
+
+describe_market_position <- function(analysis, country) {
+  index <- match(country, analysis$features$country)
+  if (is.na(index)) stop("This market does not have complete features for the selected month.")
+  variables <- names(structure_feature_labels)
+  selected <- analysis$features[index, ]
+  values <- unlist(selected[variables], use.names = TRUE)
+  medians <- vapply(analysis$features[variables], stats::median, numeric(1))
+  spreads <- vapply(analysis$features[variables], stats::sd, numeric(1))
+  standardized_difference <- (values - medians) / spreads
+  comparison <- ifelse(abs(standardized_difference) < .35, "Near market median",
+    ifelse(standardized_difference > 0, "Above market median", "Below market median"))
+  display_value <- c(
+    yield_level = sprintf("%.2f%%", unname(values["yield_level"])),
+    change_12m_bp = sprintf("%+.0f bp", unname(values["change_12m_bp"])),
+    volatility_bp = sprintf("%.1f bp", unname(values["volatility_bp"])),
+    lagged_inflation = sprintf("%.2f%%", unname(values["lagged_inflation"]))
+  )
+  feature_table <- data.frame(
+    feature = unname(structure_plain_labels[variables]),
+    value = unname(display_value[variables]),
+    comparison = unname(comparison[variables]),
+    difference = unname(standardized_difference[variables])
+  )
+  distances <- sqrt(rowSums((analysis$scaled - matrix(analysis$scaled[index, ],
+    nrow(analysis$scaled), ncol(analysis$scaled), byrow = TRUE))^2))
+  peer_order <- order(distances)
+  peer_order <- peer_order[peer_order != index]
+  peers <- analysis$features$country[head(peer_order, 3L)]
+  group <- as.character(analysis$scores$cluster[index])
+  group_indices <- which(analysis$scores$cluster == analysis$scores$cluster[index])
+  centroid <- colMeans(analysis$scaled[group_indices, , drop = FALSE])
+  group_distances <- sqrt(rowSums((analysis$scaled[group_indices, , drop = FALSE] -
+    matrix(centroid, length(group_indices), length(centroid), byrow = TRUE))^2))
+  selected_distance <- sqrt(sum((analysis$scaled[index, ] - centroid)^2))
+  percentile <- mean(group_distances <= selected_distance)
+  position <- if (percentile <= .5) "Near the group centre" else if (percentile <= .8) "Somewhat distinctive" else "Distinctive within its group"
+  strongest <- order(abs(standardized_difference), decreasing = TRUE)[1:2]
+  direction_text <- ifelse(standardized_difference[strongest] > 0,
+    "above the cross-market median", "below the cross-market median")
+  explanation <- paste(sprintf("%s is %s", tolower(structure_plain_labels[strongest]), direction_text), collapse = "; ")
+  list(
+    country = country,
+    group = group,
+    peers = peers,
+    position = position,
+    explanation = explanation,
+    features = feature_table,
+    as_of = selected$as_of,
+    inflation_year = selected$inflation_year
+  )
 }
 
 fit_market_panel_gam <- function(data, inflation, end_month, years = 5L) {
@@ -168,41 +228,46 @@ fit_market_panel_gam <- function(data, inflation, end_month, years = 5L) {
 market_structure_ui <- function(id, catalog) {
   ns <- NS(id)
   tabPanel("Market structure", value = "structure",
-    div(class = "section-intro", h2("Find structure without turning it into a recommendation"),
-      p("Reduce several market features into common factors, group similar markets, and inspect a historical statistical model.")),
+    div(class = "section-intro", h2("See which markets move and behave alike"),
+      p("Start with one market. Yield Atlas finds its closest observed peers and explains the features behind the comparison.")),
     div(class = "panel-card market-panel",
-      div(class = "section-heading", div(span(class = "eyebrow", "PCA + UNSUPERVISED LEARNING"),
-        h2("How are sovereign markets positioned?"),
-        p("Every feature is standardized before PCA and clustering. Group numbers are identifiers, not rankings."))),
+      div(class = "section-heading", div(span(class = "eyebrow", "START WITH A MARKET"),
+        h2("Who are its closest peers?"),
+        p("Similarity is based on observed yield, recent movement, volatility and previous-year inflation."))),
       div(class = "market-filters",
-        selectInput(ns("end_month"), "Observation month", choices = NULL),
-        selectInput(ns("lookback"), "Volatility window", choices = c("24 months" = 24, "36 months" = 36, "60 months" = 60), selected = 36),
-        selectInput(ns("method"), "Clustering method", choices = c("K-means", "Ward hierarchical"))),
-      selectInput(ns("clusters"), "Number of groups", choices = c("Choose by silhouette" = "Auto", 2:6), selected = "Auto"),
-      uiOutput(ns("metrics")),
+        selectInput(ns("focus_country"), "Market", choices = sort(catalog$country), selected = "United States"),
+        selectInput(ns("end_month"), "Observation month", choices = NULL)),
+      uiOutput(ns("selected_metrics")),
+      uiOutput(ns("plain_summary")),
+      uiOutput(ns("feature_cards")),
+      tags$details(class = "advanced-assumptions", tags$summary("Adjust the comparison method"),
+        div(class = "market-filters",
+          selectInput(ns("lookback"), "Volatility window", choices = c("24 months" = 24, "36 months" = 36, "60 months" = 60), selected = 36),
+          selectInput(ns("method"), "Grouping method", choices = c("K-means", "Ward hierarchical")),
+          selectInput(ns("clusters"), "Number of groups", choices = c("Choose automatically" = "Auto", 2:6), selected = "Auto"))),
       p(class = "panel-footnote", "Each market uses its latest reported yield at or before the selected month. Values are not carried forward into missing months.")),
-    div(class = "investment-two-col",
-      div(class = "panel-card market-panel", h3("Market factor map"),
-        plotly::plotlyOutput(ns("factor_map"), height = "430px"),
-        p(class = "panel-footnote", "Nearby markets have similar standardized yield, 12-month change, volatility and lagged inflation features.")),
-      div(class = "panel-card market-panel", h3("Variance retained"),
-        plotly::plotlyOutput(ns("scree"), height = "260px"),
-        h3("What drives the first two components"),
-        plotly::plotlyOutput(ns("loadings"), height = "260px"))),
-    div(class = "panel-card market-panel structure-table", h3("Group profiles"),
-      DT::DTOutput(ns("profiles")),
-      p(class = "panel-footnote", "Profile values are group means in their original units. The clustering itself uses standardized features.")),
+    div(class = "panel-card market-panel", h3("Market similarity map"),
+      plotly::plotlyOutput(ns("factor_map"), height = "430px"),
+      p(class = "panel-footnote", "Markets plotted closer together have more similar observed features. The selected market is outlined and labelled.")),
+    tags$details(class = "panel-card market-panel structure-technical", tags$summary("How this map was calculated"),
+      p("The technical view is kept here for auditability. Group numbers identify similar markets; they are not risk or quality rankings."),
+      uiOutput(ns("metrics")),
+      div(class = "investment-two-col",
+        div(h3("Information captured by the map"), plotly::plotlyOutput(ns("scree"), height = "280px")),
+        div(h3("What shapes the map"), plotly::plotlyOutput(ns("loadings"), height = "280px"))),
+      div(class = "structure-table", h3("Typical group characteristics"),
+        DT::DTOutput(ns("profiles")),
+        p(class = "panel-footnote", "Profile values are group means in their original units. The grouping itself uses standardized features."))),
     div(class = "panel-card market-panel",
-      div(class = "section-heading", div(span(class = "eyebrow", "ADVANCED STATISTICAL MODELLING"),
-        h2("Explain the historical pattern"),
-        p("A panel GAM combines a common smooth time pattern, previous-year inflation and a country random effect."))),
-      div(class = "market-filters",
-        selectInput(ns("model_country"), "Market to inspect", choices = sort(catalog$country), selected = "United States"),
-        selectInput(ns("model_years"), "Model history", choices = c("3 years" = 3, "5 years" = 5), selected = 5)),
-      uiOutput(ns("model_metrics")),
+      div(class = "section-heading", div(span(class = "eyebrow", "HISTORICAL PATTERN"),
+        h2("Is the latest yield close to its fitted history?"),
+        p("Observed yields are compared with a statistical description of their historical pattern."))),
+      selectInput(ns("model_years"), "History used", choices = c("3 years" = 3, "5 years" = 5), selected = 5),
+      uiOutput(ns("pattern_summary")),
       plotly::plotlyOutput(ns("model_chart"), height = "360px"),
       p(class = "panel-footnote", "The fitted line explains observed history. It is not extended beyond the data and is not a yield forecast."),
-      tags$details(tags$summary("Model diagnostics and interpretation limits"),
+      tags$details(tags$summary("View model quality and diagnostics"),
+        uiOutput(ns("model_metrics")),
         plotly::plotlyOutput(ns("residuals"), height = "280px"),
         uiOutput(ns("model_note")))),
     div(class = "market-disclosure",
@@ -224,12 +289,40 @@ market_structure_server <- function(id, state, market_state) {
       validate(need(!inherits(result, "error"), if (inherits(result, "error")) conditionMessage(result) else ""))
       result
     })
+    position <- reactive({
+      req(input$focus_country)
+      result <- tryCatch(describe_market_position(analysis(), input$focus_country), error = identity)
+      validate(need(!inherits(result, "error"), if (inherits(result, "error")) conditionMessage(result) else ""))
+      result
+    })
     panel_model <- reactive({
       req(input$end_month, input$model_years)
       result <- tryCatch(fit_market_panel_gam(benchmark(), bundle()$inflation, input$end_month,
         as.integer(input$model_years)), error = identity)
       validate(need(!inherits(result, "error"), if (inherits(result, "error")) conditionMessage(result) else ""))
       result
+    })
+    output$selected_metrics <- renderUI({
+      p <- position()
+      div(class = "metric-grid",
+        investment_card("PEER GROUP", p$group, "Similarity label, not a rating"),
+        investment_card("CLOSEST MARKET", p$peers[1], "Using all four observed features"),
+        investment_card("POSITION IN GROUP", p$position, "Distance from the group centre"),
+        investment_card("YIELD OBSERVATION", format(p$as_of, "%b %Y"), paste("Inflation year", p$inflation_year)))
+    })
+    output$plain_summary <- renderUI({
+      p <- position()
+      explanation <- paste0(toupper(substr(p$explanation, 1, 1)), substring(p$explanation, 2))
+      div(class = "reference-note",
+        strong(paste(p$country, "is grouped with markets showing similar conditions.")),
+        tags$br(), paste0("Closest observed peers: ", paste(p$peers, collapse = ", "), "."),
+        tags$br(), paste0(explanation, "."),
+        tags$br(), "This grouping describes similarity. It is not a credit score or investment recommendation.")
+    })
+    output$feature_cards <- renderUI({
+      x <- position()$features
+      div(class = "metric-grid structure-features",
+        lapply(seq_len(nrow(x)), function(i) investment_card(toupper(x$feature[i]), x$value[i], x$comparison[i])))
     })
     output$metrics <- renderUI({
       a <- analysis()
@@ -241,14 +334,36 @@ market_structure_server <- function(id, state, market_state) {
     })
     output$factor_map <- plotly::renderPlotly({
       a <- analysis(); x <- a$scores
-      plotly::plot_ly(x, x = ~PC1, y = ~PC2, color = ~cluster, text = ~country,
+      selected <- x[x$country == input$focus_country, ]
+      chart <- plotly::plot_ly(x, x = ~PC1, y = ~PC2, color = ~cluster, text = ~country,
         type = "scatter", mode = "markers", marker = list(size = 11, line = list(color = "white", width = 1)),
-        hovertemplate = "%{text}<br>PC1 %{x:.2f}<br>PC2 %{y:.2f}<extra>%{fullData.name}</extra>") |>
+        hovertemplate = "%{text}<br>Characteristic 1: %{x:.2f}<br>Characteristic 2: %{y:.2f}<extra>%{fullData.name}</extra>")
+      if (nrow(selected)) chart <- plotly::add_trace(chart, data = selected, x = ~PC1, y = ~PC2,
+        type = "scatter", mode = "markers+text", text = ~country, textposition = "top center",
+        marker = list(size = 18, symbol = "diamond-open", color = "#172e3b", line = list(width = 2)),
+        hovertemplate = "%{text}<extra>Selected market</extra>", showlegend = FALSE, inherit = FALSE)
+      chart |>
         plotly::layout(paper_bgcolor = "transparent", plot_bgcolor = "white",
-          xaxis = list(title = sprintf("PC1 (%.1f%%)", 100 * a$variance[1]), gridcolor = "#eef2f3"),
-          yaxis = list(title = sprintf("PC2 (%.1f%%)", 100 * a$variance[2]), gridcolor = "#eef2f3"),
+          xaxis = list(title = sprintf("Combined characteristic 1 (%.1f%% of information)", 100 * a$variance[1]), gridcolor = "#eef2f3"),
+          yaxis = list(title = sprintf("Combined characteristic 2 (%.1f%%)", 100 * a$variance[2]), gridcolor = "#eef2f3"),
           legend = list(orientation = "h", y = -0.18), margin = list(l = 60, r = 20, b = 70, t = 20)) |>
         plotly::config(displaylogo = FALSE, responsive = TRUE)
+    })
+    output$pattern_summary <- renderUI({
+      req(input$focus_country)
+      model <- panel_model(); x <- model$data
+      x <- x[as.character(x$country) == input$focus_country, ]
+      validate(need(nrow(x) > 0, "This market has no matched observations in the model window."))
+      latest <- tail(x[order(x$date), ], 1)
+      gap <- latest$yield - latest$fitted
+      relative_gap <- abs(gap) / model$metrics$rmse
+      position_text <- if (relative_gap <= .5) "close to" else if (gap > 0) "above" else "below"
+      div(class = "reference-note",
+        strong(paste0(input$focus_country, " / ", format(latest$date, "%B %Y"))), tags$br(),
+        paste0("Observed yield was ", sprintf("%.2f%%", latest$yield), ", ", position_text,
+          " the fitted historical value of ", sprintf("%.2f%%", latest$fitted), ". "),
+        if (relative_gap <= .5) "The difference is small relative to the model's typical error."
+        else paste("The difference was", sprintf("%.2f", relative_gap), "times the model RMSE."))
     })
     output$scree <- plotly::renderPlotly({
       a <- analysis(); x <- data.frame(component = paste0("PC", seq_along(a$variance)), variance = 100 * a$variance)
@@ -277,8 +392,8 @@ market_structure_server <- function(id, state, market_state) {
         investment_card("RESIDUAL LAG-1", sprintf("%.2f", m$residual_lag1), "Remaining monthly dependence"))
     })
     output$model_chart <- plotly::renderPlotly({
-      req(input$model_country); x <- panel_model()$data
-      x <- x[as.character(x$country) == input$model_country, ]
+      req(input$focus_country); x <- panel_model()$data
+      x <- x[as.character(x$country) == input$focus_country, ]
       validate(need(nrow(x) > 0, "This market has no matched observations in the model window."))
       chart <- plotly::plot_ly(x, x = ~date) |>
         plotly::add_ribbons(ymin = ~lower, ymax = ~upper, name = "95% model interval",

@@ -26,7 +26,7 @@ The app is intended for screening and general research. It does not recommend wh
 - Budget, settlement date, holding period, price and FX assumptions
 - Estimated face value, coupons, sale/redemption proceeds and holding-period return
 - Price/FX sensitivity chart and downloadable cash-flow table
-- PCA factor map and clustering of markets with similar observed features
+- Plain-language peer comparison backed by a PCA factor map and clustering of markets with similar observed features
 - Historical panel GAM with fitted uncertainty and residual diagnostics
 - Data source, retrieval date and methodology shown inside the app
 
