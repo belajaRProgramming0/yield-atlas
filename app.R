@@ -1,6 +1,7 @@
 library(shiny)
 source("R/market_data.R")
 source("R/investment_ui.R")
+source("R/market_structure.R")
 instrument_state <- tryCatch(read_instruments(), error = function(e) list(error = conditionMessage(e)))
 catalog <- market_catalog()
 palette <- setNames(grDevices::hcl.colors(nrow(catalog), "Dark 3"), catalog$country)
@@ -59,6 +60,7 @@ ui <- fluidPage(
               selectInput("history", "History window", choices = c("1 year" = 1, "3 years" = 3, "5 years" = 5, "All available" = 0), selected = 3),
               selectInput("end_month", "Through month", choices = NULL)),
             plotly::plotlyOutput("custom_chart", height = "390px"), uiOutput("custom_note"))),
+        market_structure_ui("structure", catalog),
         tabPanel("Data & methodology", value = "sources",
           div(class = "section-intro", h2("Trace every series to its source"), p("No simulated observations. Missing data stays missing.")),
           div(class = "panel-card", uiOutput("source_description"), DT::DTOutput("sources")),
@@ -81,6 +83,7 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "market_tab", selected = "bond_lab")
   })
   bond_lab_server("bonds", instrument_state)
+  market_structure_server("structure", instrument_state, market_state)
   data <- reactive({
     validate(need(is.null(market_state$error), market_state$error))
     market_state$data

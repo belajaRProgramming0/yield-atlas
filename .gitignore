@@ -29,3 +29,6 @@ temp/
 test-results/
 playwright-report/
 screenshots/
+
+# Local course references
+lecture material/

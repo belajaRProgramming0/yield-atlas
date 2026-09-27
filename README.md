@@ -12,7 +12,7 @@
 
 ---
 
-Yield Atlas is an R Shiny app for exploring **government bond yields** and testing a simple investment scenario before checking the final details with a broker. It brings country benchmarks, individual bond terms, inflation, FX and estimated cash flows into one place.
+Yield Atlas is an R Shiny app for exploring **government bond yields** and testing a simple investment scenario before checking the final details with a broker. It brings country benchmarks, market structure, individual bond terms, inflation, FX and estimated cash flows into one place.
 
 The app is intended for screening and general research. It does not recommend which bond to buy and does not provide live executable prices.
 
@@ -26,6 +26,8 @@ The app is intended for screening and general research. It does not recommend wh
 - Budget, settlement date, holding period, price and FX assumptions
 - Estimated face value, coupons, sale/redemption proceeds and holding-period return
 - Price/FX sensitivity chart and downloadable cash-flow table
+- PCA factor map and clustering of markets with similar observed features
+- Historical panel GAM with fitted uncertainty and residual diagnostics
 - Data source, retrieval date and methodology shown inside the app
 
 ## Feed datasets
@@ -77,6 +79,9 @@ Restart the app after refreshing. The scripts validate downloaded files before r
 - Coupons: fixed annual coupon divided into semiannual payments
 - Exit: assumed clean sale price before maturity, or principal redemption at 100 at maturity
 - Sensitivity: recalculation across different sale-price and FX assumptions
+- Market structure: standardized PCA using yield level, 12-month change, monthly-change volatility and previous-year inflation
+- Market groups: K-means or Ward hierarchical clustering, with the automatic group count chosen by average silhouette width
+- Historical model: panel GAM with a common smooth time effect, lagged inflation and a country random effect
 
 The result is based on user assumptions, not predicted market data. Missing source observations remain missing and are not carried forward.
 
@@ -100,6 +105,7 @@ TIPS, floating-rate notes, Treasury bills, bond ETFs and securities from other m
 - Returns are for the selected holding period and are not annualised
 - Default, recovery, liquidity and bid-ask spread are not modelled
 - Actual availability, denomination, eligibility, fees and tax treatment still need to be checked externally
+- PCA, clusters and fitted model relationships depend on the chosen month, window and available observations
 
 The local market snapshot will eventually become stale under the three-month freshness rule. Run the refresh scripts before using an older clone of the repository.
 
@@ -109,7 +115,7 @@ The local market snapshot will eventually become stale under the three-month fre
 | --- | --- |
 | App | `R`, `shiny`, `DT`, `plotly` |
 | Data download | `httr2`, `xml2`, `jsonlite`, `readxl` |
-| Market processing | Base R data frames and validation functions |
+| Market processing | Base R, `cluster`, `mgcv` |
 | Charts | `plotly` |
 | Storage | CSV, JSON, XML, XLSX and RDS source snapshots |
 
@@ -118,6 +124,7 @@ The local market snapshot will eventually become stale under the three-month fre
 ```sh
 Rscript tests/market_dashboard.R
 Rscript tests/bond_scenarios.R
+Rscript tests/market_structure.R
 ```
 
 ## Project notes
